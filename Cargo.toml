@@ -1,0 +1,15 @@
+[package]
+name = "circlefi-contract"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+soroban-sdk = { version = "21.1.0", features = ["contract"] }
+soroban-sdk-macros = "21.1.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[[bin]]
+name = "circlefi_contract"
+path = "src/lib.rs"
