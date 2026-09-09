@@ -1,4 +1,8 @@
-/target
-Cargo.lock
+target/
+.soroban/
+.stellar/
 *.wasm
+node_modules/
+.env
 .DS_Store
+test_snapshots/
