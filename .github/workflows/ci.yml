@@ -2,10 +2,8 @@ name: ci
 on:
   push: { branches: [main] }
   pull_request:
-env:
-  CARGO_TERM_COLOR: always
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,9 +11,12 @@ jobs:
         with: { components: "rustfmt, clippy", targets: "wasm32v1-none" }
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all -- --check
+      # the factory embeds the circle wasm at compile time, so build it first
+      - name: build the circle for the chain it runs on
+        run: cargo build -p circlefi-circle --target wasm32v1-none --release
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test --all
-      - name: the contract must build for the chain it runs on
+      - name: build every contract for the chain
         run: cargo build --target wasm32v1-none --release
       - name: report the deployed size
         run: ls -l target/wasm32v1-none/release/*.wasm

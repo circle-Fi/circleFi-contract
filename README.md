@@ -9,16 +9,34 @@ and the Caribbean, *tanda* in Mexico, *chit fund* in India, *hui* in China.
 ## Live on testnet
 
 ```
-contract  CDIDPDIPE7BWHLGDY32I6JUIJLATMHUYL4ZHK7BFLFR3EXEM7QRAYRLI
-network   Test SDF Network ; September 2015
-token     native (XLM) Stellar Asset Contract
-terms     3 members, 1 XLM per round, 5-minute rounds
+factory      CCJRXTYIEFE6Z7DGTAKRGBLOGYBZNOONHI7FWZUDXEKZ7LGEGZNXKG3M
+circle wasm  8c67956897b34dd87029a92620f89ea6a8d2936963fbc161661c531d3a4e5943
+network      Test SDF Network ; September 2015
+token        native (XLM) Stellar Asset Contract
 ```
 
-Read it without a wallet, an account or a fee:
+The factory holds the circle's code hash and deploys a fresh circle per call,
+so anyone with a wallet can open one - no CLI, no upload step. Circles it has
+opened, newest first:
 
 ```sh
-stellar contract invoke --id CDIDPDIPE7BWHLGDY32I6JUIJLATMHUYL4ZHK7BFLFR3EXEM7QRAYRLI \
+stellar contract invoke --id CCJRXTYIEFE6Z7DGTAKRGBLOGYBZNOONHI7FWZUDXEKZ7LGEGZNXKG3M \
+  --network testnet --source <your-key> -- list --offset 0 --limit 10
+```
+
+The first circle opened through it, and one deployed by hand before the
+factory existed:
+
+```
+circle #1    CBV6IG53JF7WIINUBJS27YUCPCWUJM5EUSOWQKH7FKQLENKUR6Y2MA6Y
+by hand      CDIDPDIPE7BWHLGDY32I6JUIJLATMHUYL4ZHK7BFLFR3EXEM7QRAYRLI
+terms        3 members, 1 XLM per round, 5-minute rounds
+```
+
+Read one without a wallet, an account or a fee:
+
+```sh
+stellar contract invoke --id CBV6IG53JF7WIINUBJS27YUCPCWUJM5EUSOWQKH7FKQLENKUR6Y2MA6Y \
   --network testnet --source <your-key> -- get_state
 ```
 

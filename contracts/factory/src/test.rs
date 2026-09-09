@@ -8,9 +8,7 @@
 // CI does that before `cargo test`. `cargo test -p circlefi-circle` needs
 // nothing and covers the circle itself.
 mod circle_wasm {
-    soroban_sdk::contractimport!(
-        file = "../../target/wasm32v1-none/release/circlefi_circle.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../../target/wasm32v1-none/release/circlefi_circle.wasm");
 }
 
 use super::*;
@@ -54,7 +52,9 @@ fn starts_empty() {
 #[test]
 fn creates_a_circle_that_is_a_real_working_circle() {
     let f = setup();
-    let addr = f.client.create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
+    let addr = f
+        .client
+        .create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
 
     // The deployed address is a live circle carrying the terms it was made with.
     let circle = circle_wasm::Client::new(&f.env, &addr);
@@ -73,7 +73,9 @@ fn creates_a_circle_that_is_a_real_working_circle() {
 #[test]
 fn indexes_what_it_creates() {
     let f = setup();
-    let a = f.client.create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
+    let a = f
+        .client
+        .create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
 
     assert_eq!(f.client.count(), 1);
     let l = f.client.get(&0).unwrap();
@@ -86,10 +88,14 @@ fn indexes_what_it_creates() {
 #[test]
 fn every_circle_gets_its_own_address() {
     let f = setup();
-    let a = f.client.create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
+    let a = f
+        .client
+        .create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
     // Identical terms must still produce a distinct circle, or the second
     // create would collide with the first.
-    let b = f.client.create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
+    let b = f
+        .client
+        .create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
     assert_ne!(a, b);
     assert_eq!(f.client.count(), 2);
 }
@@ -97,9 +103,15 @@ fn every_circle_gets_its_own_address() {
 #[test]
 fn lists_newest_first_and_pages() {
     let f = setup();
-    let a = f.client.create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
-    let b = f.client.create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &4);
-    let c = f.client.create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &5);
+    let a = f
+        .client
+        .create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &3);
+    let b = f
+        .client
+        .create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &4);
+    let c = f
+        .client
+        .create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &5);
 
     let page = f.client.list(&0, &2);
     assert_eq!(page.len(), 2);
@@ -121,15 +133,18 @@ fn rejects_terms_the_circle_would_reject() {
         Err(Ok(Error::InvalidTerms))
     );
     assert_eq!(
-        f.client.try_create(&f.user, &f.token, &CONTRIBUTION, &0u64, &3),
+        f.client
+            .try_create(&f.user, &f.token, &CONTRIBUTION, &0u64, &3),
         Err(Ok(Error::InvalidTerms))
     );
     assert_eq!(
-        f.client.try_create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &2),
+        f.client
+            .try_create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &2),
         Err(Ok(Error::InvalidCapacity))
     );
     assert_eq!(
-        f.client.try_create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &25),
+        f.client
+            .try_create(&f.user, &f.token, &CONTRIBUTION, &ROUND, &25),
         Err(Ok(Error::InvalidCapacity))
     );
     assert_eq!(f.client.count(), 0, "nothing was indexed");

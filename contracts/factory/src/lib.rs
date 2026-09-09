@@ -114,19 +114,16 @@ impl Factory {
             b
         });
 
-        let address = env
-            .deployer()
-            .with_current_contract(salt)
-            .deploy_v2(
-                wasm,
-                (
-                    creator.clone(),
-                    token.clone(),
-                    contribution,
-                    round_seconds,
-                    capacity,
-                ),
-            );
+        let address = env.deployer().with_current_contract(salt).deploy_v2(
+            wasm,
+            (
+                creator.clone(),
+                token.clone(),
+                contribution,
+                round_seconds,
+                capacity,
+            ),
+        );
 
         let listing = Listing {
             address: address.clone(),
