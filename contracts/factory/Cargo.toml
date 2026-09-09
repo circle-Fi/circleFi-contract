@@ -1,5 +1,5 @@
 [package]
-name = "circlefi-circle"
+name = "circlefi-factory"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -13,6 +13,4 @@ soroban-sdk = "27"
 
 [dev-dependencies]
 soroban-sdk = { version = "27", features = ["testutils"] }
-
-[features]
-testutils = ["soroban-sdk/testutils"]
+circlefi-circle = { path = "../circle", features = ["testutils"] }
