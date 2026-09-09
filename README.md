@@ -6,6 +6,8 @@ A Soroban contract for the savings mechanism most of the unbanked world already
 uses - *adashe* in Hausa, *esusu* and *ajo* in Yoruba and Igbo, *susu* in Ghana
 and the Caribbean, *tanda* in Mexico, *chit fund* in India, *hui* in China.
 
+An app for it: https://circle-fi.github.io/circleFi-app/ - browse a circle, or open one from a wallet, with no CLI. The [SDK](https://github.com/circle-Fi/circleFi-sdk) wraps these contracts for everything else.
+
 ## Live on testnet
 
 ```
