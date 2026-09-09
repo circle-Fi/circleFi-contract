@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CircleFi - a savings circle you can join with strangers</title>
+<meta name="description" content="A rotating savings circle (esusu, ajo, susu, tanda) on Stellar. A security deposit covers any missed round, so whoever's turn it is always gets paid in full.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>&#129689;</text></svg>">
+<style>
+:root{--paper:#f4f2ee;--surface:#fbfaf8;--surface2:#e8e5df;--ink:#1a1815;--ink2:#4d4841;--ink3:#7d766c;--rule:#d6d1c8;--accent:#a8451a;--pass:#2f6552;--warn:#8a6a1e;
+--sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media(prefers-color-scheme:dark){:root{--paper:#14120f;--surface:#1b1815;--surface2:#24201b;--ink:#ece8e1;--ink2:#b0a89c;--ink3:#837b6f;--rule:#322d27;--accent:#e08453;--pass:#6fb99b;--warn:#cfa445}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:940px;margin:0 auto;padding:0 22px}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono)}
+header{background:var(--surface);border-bottom:1px solid var(--rule);padding:30px 0 26px}
+.mh{display:flex;justify-content:space-between;align-items:flex-start;gap:28px;flex-wrap:wrap}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0;font-weight:600}
+h1{font-size:clamp(32px,5vw,48px);line-height:.95;letter-spacing:-.03em;margin:8px 0 0;font-weight:700}
+.deck{color:var(--ink2);margin:11px 0 0;max-width:44ch}
+.btn{font-family:var(--sans);font-size:13.5px;font-weight:600;background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:3px;padding:8px 15px;cursor:pointer}
+.btn:hover:not(:disabled){background:var(--accent);border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink2);border-color:var(--rule)}
+.btn.ghost:hover:not(:disabled){background:var(--surface);color:var(--ink)}
+.addr{font-family:var(--mono);font-size:12px;color:var(--ink3);margin:8px 0 0}
+.loader{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:26px 0 0}
+.field{display:grid;gap:5px;flex:1 1 340px}
+.field span{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3)}
+.field input{font-family:var(--mono);font-size:13px;padding:8px 10px;border:1px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink)}
+.msg{margin:18px 0 0;padding:11px 15px;font-size:14.5px;border-left:3px solid var(--accent);background:var(--surface)}
+.msg.ok{border-left-color:var(--pass)}
+.verdict{font-size:17px;margin:28px 0 0;padding-left:14px;border-left:3px solid var(--rule);max-width:68ch}
+.verdict.good{border-left-color:var(--pass)}.verdict.warn{border-left-color:var(--warn)}
+.stats{display:flex;flex-wrap:wrap;gap:0 30px;margin:18px 0 0;padding:14px 0 0;border-top:1px solid var(--rule)}
+.stat dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3)}
+.stat dd{margin:2px 0 0;font-size:20px;font-variant-numeric:tabular-nums}
+h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);margin:34px 0 10px;font-weight:600}
+.actions{display:flex;gap:9px;flex-wrap:wrap}
+.note{color:var(--ink3);font-size:13.5px;margin:12px 0 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:0 14px 8px 0;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:11px 14px 11px 0;border-bottom:1px solid var(--rule);vertical-align:baseline}
+tr.you td{background:var(--surface)}
+tr.next td:first-child{font-weight:700;color:var(--accent)}
+.who{font-family:var(--mono);font-size:12.5px}
+.tag{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border:1px solid var(--rule);border-radius:2px;color:var(--ink3);white-space:nowrap}
+.tag.yes{color:var(--pass);border-color:currentColor}.tag.no{color:var(--warn);border-color:currentColor}.tag.bad{color:var(--accent);border-color:currentColor}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:22px;margin-top:8px}
+.step{border-top:2px solid var(--rule);padding-top:11px}
+.step.ok{border-top-color:var(--pass)}
+.step h3{font-family:var(--mono);font-size:12.5px;margin:0 0 5px;font-weight:600}
+.step p{font-size:13.5px;color:var(--ink2);margin:6px 0 0;line-height:1.5}
+.rule{margin-top:22px;font-size:14.5px;color:var(--ink2);max-width:74ch}
+footer{margin-top:52px;padding:22px 0 44px;border-top:1px solid var(--rule);color:var(--ink3);font-size:13.5px}
+footer p{max-width:76ch;margin:0}
+.scroll{overflow-x:auto}
+@media(max-width:640px){.mh{flex-direction:column}.stats{gap:0 20px}.stat dd{font-size:17px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap mh">
+    <div>
+      <p class="eyebrow">Stellar &middot; Soroban</p>
+      <h1>CircleFi</h1>
+      <p class="deck">A savings circle you can join with people you have never met, because the contract holds the collateral that trust used to.</p>
+    </div>
+    <div>
+      <button class="btn" id="connect" type="button">Connect wallet</button>
+      <p class="addr" id="addr" hidden></p>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="loader">
+    <label class="field"><span>Circle contract</span>
+      <input id="cid" class="mono" spellcheck="false" placeholder="C&hellip;"></label>
+    <button class="btn" id="load" type="button">Open circle</button>
+  </div>
+
+  <p class="msg" id="err" hidden></p>
+  <p class="msg ok" id="ok" hidden></p>
+
+  <main id="circle" hidden>
+    <p class="verdict" id="verdict"></p>
+    <dl class="stats" id="stats"></dl>
+
+    <h2>Your move</h2>
+    <div class="actions" id="actions"></div>
+    <p class="note" id="anote"></p>
+
+    <h2>The rotation</h2>
+    <p class="note" style="margin-bottom:14px">Payout order is join order, fixed when the circle filled - everyone could see their turn before committing anything.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Round</th><th>Member</th><th>This round</th><th>Deposit</th><th>Missed</th><th>Paid out</th></tr></thead>
+      <tbody id="members"></tbody>
+    </table></div>
+  </main>
+
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step"><h3>Join</h3><p>Lock one contribution as a security deposit. Your position is the round you get paid.</p></div>
+    <div class="step"><h3>Contribute</h3><p>Pay in each round. Every member's payment writes a different ledger entry, so a whole circle can pay in the same ledger.</p></div>
+    <div class="step ok"><h3>Someone misses</h3><p>The shortfall comes out of <em>their</em> deposit, automatically. Whoever's turn it is still gets paid in full, on time.</p></div>
+    <div class="step"><h3>Finish</h3><p>After N rounds everyone has paid N times and received once. Take your deposit back.</p></div>
+  </div>
+  <p class="rule">If a member misses a round <strong>and</strong> their deposit is already spent, the contract does not invent money - the pot is short, and it says so. Reporting that honestly matters more than pretending to guarantee something a contract cannot.</p>
+</div>
+
+<footer><div class="wrap"><p>
+Reads are simulated against a public RPC node and cost nothing - no wallet, no account, no fee.
+Writes are transactions your own wallet signs. There is no CircleFi server and no custody:
+<a href="https://github.com/circle-Fi/circleFi-contract">the contract</a> holds the funds and the rules,
+and anyone can settle a round.
+</p></div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@stellar/stellar-sdk@17.0.1/dist/stellar-sdk.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stellar/freighter-api@6.0.1/build/index.min.js"></script>
+<script>
+const S = window.StellarSdk;
+const F = window.freighterApi;
+const RPC = 'https://soroban-testnet.stellar.org';
+const PASSPHRASE = S.Networks.TESTNET;
+const NULL_ACCOUNT = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
+const DEFAULT_CIRCLE = 'CDIDPDIPE7BWHLGDY32I6JUIJLATMHUYL4ZHK7BFLFR3EXEM7QRAYRLI';
+
+// Contract error codes, mirroring the Error enum in the contract, so a failure
+// reaches the member as a sentence rather than a number.
+const ERRORS = {
+  1:'Contribution or round length was zero', 2:'Circle size must be between 3 and 24',
+  3:'The circle has already filled and started', 4:'The circle is not running',
+  5:'The circle has not finished yet', 6:'Not a member of this circle',
+  7:'Already a member of this circle', 8:'Already contributed to this round',
+  9:'The round is still open and not everyone has paid', 10:'The deposit is already whole',
+  11:'Nothing left to withdraw',
+};
+
+const server = new S.rpc.Server(RPC);
+const $ = id => document.getElementById(id);
+const short = a => a.slice(0,5) + '...' + a.slice(-5);
+let wallet = null, state = null;
+
+function explain(e) {
+  const blob = (e && (e.message || String(e))) + ' ' + JSON.stringify(e || '');
+  const m = /Error\(Contract,\s*#(\d+)\)/.exec(blob);
+  if (m && ERRORS[+m[1]]) return ERRORS[+m[1]];
+  return (e && e.message) ? e.message : String(e);
+}
+function show(el, text) { el.textContent = text; el.hidden = false; }
+function clearMsgs() { $('err').hidden = true; $('ok').hidden = true; }
+
+// ---- reads: simulation only, so they need no wallet, account or fee ----
+async function read(cid, method, args) {
+  const src = new S.Account(NULL_ACCOUNT, '0');
+  const tx = new S.TransactionBuilder(src, { fee: S.BASE_FEE, networkPassphrase: PASSPHRASE })
+    .addOperation(new S.Contract(cid).call(method, ...(args || [])))
+    .setTimeout(30).build();
+  const sim = await server.simulateTransaction(tx);
+  if (S.rpc.Api.isSimulationError(sim)) throw new Error(explain(sim.error));
+  const rv = sim.result && sim.result.retval;
+  return rv ? S.scValToNative(rv) : undefined;
+}
+
+// ---- writes: simulated first, then signed by the member's own wallet ----
+async function invoke(cid, method, args) {
+  if (!wallet) throw new Error('Connect a wallet first.');
+  const account = await server.getAccount(wallet);
+  const built = new S.TransactionBuilder(account, { fee: S.BASE_FEE, networkPassphrase: PASSPHRASE })
+    .addOperation(new S.Contract(cid).call(method, ...(args || [])))
+    .setTimeout(180).build();
+  // prepareTransaction simulates and writes the real footprint and resource fee
+  // back in, so a call that would fail does so before the wallet prompt.
+  const prepared = await server.prepareTransaction(built);
+  const signed = await F.signTransaction(prepared.toXDR(), { networkPassphrase: PASSPHRASE, address: wallet });
+  if (signed.error) throw new Error(String(signed.error));
+  const sent = await server.sendTransaction(S.TransactionBuilder.fromXDR(signed.signedTxXdr, PASSPHRASE));
+  if (sent.status === 'ERROR') throw new Error(explain(sent.errorResult || sent));
+  const done = await server.pollTransaction(sent.hash, { attempts: 30, sleepStrategy: S.rpc.LinearSleepStrategy });
+  if (done.status !== 'SUCCESS') throw new Error(explain(done.resultXdr || done.status));
+  return done.returnValue ? S.scValToNative(done.returnValue) : undefined;
+}
+
+const addr = a => new S.Address(a).toScVal();
+const u32 = n => S.nativeToScVal(n, { type: 'u32' });
+
+function amount(units, decimals, symbol) {
+  const neg = units < 0n, abs = neg ? -units : units, scale = 10n ** BigInt(decimals);
+  const frac = (abs % scale).toString().padStart(decimals, '0').replace(/0+$/, '');
+  return (neg ? '-' : '') + (abs / scale) + (frac ? '.' + frac : '') + ' ' + symbol;
+}
+function duration(s) {
+  s = Number(s);
+  if (s % 86400 === 0 && s >= 86400) { const d = s / 86400; return d === 1 ? 'a day' : d + ' days'; }
+  if (s % 3600 === 0 && s >= 3600) { const h = s / 3600; return h === 1 ? 'an hour' : h + ' hours'; }
+  if (s % 60 === 0) return (s / 60) + ' min';
+  return s + 's';
+}
+function remaining(endsAt) {
+  const left = Number(endsAt) - Math.floor(Date.now() / 1000);
+  if (left <= 0) return 'the window has closed';
+  if (left < 3600) return Math.ceil(left / 60) + ' min left';
+  if (left < 86400) return Math.floor(left / 3600) + ' h left';
+  return Math.floor(left / 86400) + ' d left';
+}
+
+async function load(cid) {
+  clearMsgs();
+  $('load').disabled = true; $('load').textContent = 'Opening...';
+  try {
+    const [cfg, st] = await Promise.all([read(cid, 'get_config'), read(cid, 'get_state')]);
+    const token = new S.Contract(cfg.token);
+    const [decimals, symbol] = await Promise.all([
+      read(cfg.token, 'decimals').catch(() => 7),
+      read(cfg.token, 'symbol').catch(() => 'token'),
+    ]);
+    const members = await Promise.all(st.members.map(async a => ({
+      address: a,
+      rec: await read(cid, 'get_member', [addr(a)]),
+      paid: Number(st.round) > 0 ? await read(cid, 'has_contributed', [u32(Number(st.round)), addr(a)]) : false,
+    })));
+    state = { cid, cfg, st, decimals: Number(decimals), symbol: String(symbol), members };
+    render();
+    const u = new URL(location.href); u.searchParams.set('c', cid); history.replaceState(null, '', u);
+  } catch (e) {
+    state = null; $('circle').hidden = true; show($('err'), explain(e));
+  } finally {
+    $('load').disabled = false; $('load').textContent = 'Open circle';
+  }
+}
+
+const STATUS = ['forming', 'active', 'complete'];
+
+function render() {
+  const { cfg, st, members, decimals, symbol } = state;
+  const money = v => amount(BigInt(v), decimals, symbol);
+  const status = STATUS[Number(st.status)] || 'forming';
+  const round = Number(st.round), capacity = Number(cfg.capacity);
+  const pot = BigInt(cfg.contribution) * BigInt(capacity);
+  $('circle').hidden = false;
+
+  const v = $('verdict');
+  if (status === 'forming') {
+    const left = capacity - members.length;
+    v.className = 'verdict warn';
+    v.textContent = `Forming - ${members.length} of ${capacity} seats taken. ` +
+      `${left} more ${left === 1 ? 'member' : 'members'} and the first round starts.`;
+  } else if (status === 'complete') {
+    v.className = 'verdict good';
+    v.textContent = 'Complete - every member has paid in full and taken their turn. Deposits can be withdrawn.';
+  } else {
+    const who = st.members[round - 1];
+    const unpaid = members.filter(m => !m.paid).length;
+    v.className = unpaid ? 'verdict' : 'verdict good';
+    v.textContent = `Round ${round} of ${capacity} - ${money(pot)} goes to ` +
+      `${who === wallet ? 'you' : short(who || '')}. ` +
+      (unpaid ? `${unpaid} still to pay, ${remaining(st.round_ends_at)}.`
+              : 'Everyone has paid; the round can be settled now.');
+  }
+
+  $('stats').innerHTML = [
+    ['Contribution', money(cfg.contribution)], ['Pot', money(pot)],
+    ['Members', members.length + ' / ' + capacity], ['Round length', duration(cfg.round_seconds)],
+  ].map(([k, val]) => `<div class="stat"><dt>${k}</dt><dd>${val}</dd></div>`).join('');
+
+  $('members').innerHTML = members.map((m, i) => {
+    const mine = m.address === wallet, isNext = status === 'active' && i === round - 1;
+    const paid = status !== 'active' ? '<span class="tag">-</span>'
+      : m.paid ? '<span class="tag yes">paid</span>' : '<span class="tag no">due</span>';
+    const dep = m.rec ? (m.rec.delinquent ? '<span class="tag bad">exhausted</span>' : money(m.rec.deposit)) : '-';
+    return `<tr class="${mine ? 'you' : ''} ${isNext ? 'next' : ''}"><td>${i + 1}</td>` +
+      `<td class="who">${short(m.address)}${mine ? ' <span class="tag">you</span>' : ''}</td>` +
+      `<td>${paid}</td><td>${dep}</td><td>${m.rec ? Number(m.rec.defaults) : 0}</td>` +
+      `<td>${m.rec && m.rec.received ? '<span class="tag yes">yes</span>' : '<span class="tag">not yet</span>'}</td></tr>`;
+  }).join('');
+
+  renderActions(status, round, capacity, money);
+}
+
+function renderActions(status, round, capacity, money) {
+  const { cid, cfg, st, members } = state;
+  const me = members.find(m => m.address === wallet);
+  const acts = []; let note = '';
+
+  if (!wallet) {
+    note = 'Connect a wallet to join or pay into this circle. Reading it needs nothing.';
+  } else if (status === 'forming') {
+    if (me) note = `You are in, at position ${members.indexOf(me) + 1}. Waiting for the circle to fill.`;
+    else acts.push([`Join - locks ${money(cfg.contribution)} as deposit`, () => invoke(cid, 'join', [addr(wallet)])]);
+  } else if (status === 'active') {
+    if (!me) note = 'This circle is running and closed to new members.';
+    else {
+      if (!me.paid) acts.push([`Contribute ${money(cfg.contribution)}`, () => invoke(cid, 'contribute', [addr(wallet)])]);
+      if (me.rec && BigInt(me.rec.deposit) < BigInt(cfg.contribution))
+        acts.push([`Top up deposit (${money(BigInt(cfg.contribution) - BigInt(me.rec.deposit))})`,
+                   () => invoke(cid, 'top_up', [addr(wallet)]), true]);
+      const all = members.every(m => m.paid);
+      const closed = Number(st.round_ends_at) <= Math.floor(Date.now() / 1000);
+      if (all || closed) acts.push(['Settle this round', () => invoke(cid, 'settle', []), true]);
+      else if (me.paid) note = `You are paid up for round ${round}. Waiting on the others - ${remaining(st.round_ends_at)}.`;
+    }
+  } else if (status === 'complete') {
+    if (me && me.rec && BigInt(me.rec.deposit) > 0n)
+      acts.push([`Withdraw deposit (${money(me.rec.deposit)})`, () => invoke(cid, 'withdraw_deposit', [addr(wallet)])]);
+    else if (me) note = 'Nothing left to withdraw - your deposit went to covering a missed round.';
+  }
+
+  $('actions').innerHTML = '';
+  for (const [label, run, ghost] of acts) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = ghost ? 'btn ghost' : 'btn'; b.textContent = label;
+    b.onclick = async () => {
+      clearMsgs(); b.disabled = true; const was = b.textContent; b.textContent = 'Waiting for your wallet...';
+      try { await run(); show($('ok'), 'Done - the ledger has it.'); await load(state.cid); }
+      catch (e) { show($('err'), explain(e)); b.disabled = false; b.textContent = was; }
+    };
+    $('actions').appendChild(b);
+  }
+  $('anote').textContent = note;
+}
+
+// Freighter answers by posting to a content script; with no extension installed
+// nothing ever answers, so bound the wait rather than letting the UI go quiet.
+async function walletPresent(ms) {
+  try {
+    return await Promise.race([
+      Promise.resolve(F && F.isConnected()).then(r => !!(r && r.isConnected)),
+      new Promise(r => setTimeout(() => r(false), ms || 1500)),
+    ]);
+  } catch { return false; }
+}
+
+$('connect').onclick = async () => {
+  clearMsgs();
+  const was = $('connect').textContent;
+  $('connect').disabled = true; $('connect').textContent = 'Checking...';
+  try {
+    if (!(await walletPresent())) {
+      show($('err'), 'No Stellar wallet detected. Install Freighter, then reload this page.');
+      $('connect').textContent = 'Install Freighter'; return;
+    }
+    const res = await F.requestAccess();
+    if (res.error) throw new Error(String(res.error));
+    wallet = res.address || (await F.getAddress()).address;
+    $('connect').textContent = 'Wallet connected';
+    show($('addr'), short(wallet));
+    if (state) await load(state.cid);
+  } catch (e) {
+    show($('err'), explain(e)); $('connect').textContent = was;
+  } finally { if (!wallet) $('connect').disabled = false; }
+};
+
+$('load').onclick = () => {
+  const id = $('cid').value.trim();
+  if (!id) { show($('err'), 'Paste the circle contract id first.'); return; }
+  load(id);
+};
+$('cid').addEventListener('keydown', e => { if (e.key === 'Enter') $('load').click(); });
+
+const preset = new URLSearchParams(location.search).get('c') || DEFAULT_CIRCLE;
+$('cid').value = preset;
+load(preset);
+walletPresent().then(p => { if (!p && !wallet) $('connect').textContent = 'Install Freighter'; });
+</script>
+</body>
+</html>
