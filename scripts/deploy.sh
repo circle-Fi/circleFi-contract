@@ -20,8 +20,8 @@ command -v stellar >/dev/null || {
 }
 
 echo "==> building"
-cargo build --target wasm32-unknown-unknown --release
-WASM=target/wasm32-unknown-unknown/release/circlefi_circle.wasm
+cargo build --target wasm32v1-none --release
+WASM=target/wasm32v1-none/release/circlefi_circle.wasm
 ls -l "$WASM"
 
 echo "==> identity"
