@@ -184,8 +184,8 @@ input. If the harness finds a bug, the output names the violated invariant and
 the exact `CircleParams` and action matrix that triggered it.
 
 ```sh
-cargo test -p circlefi-circle          # runs scenario tests + property tests
-PROPTEST_CASES=1000 cargo test         # run more cases for a deeper search
+cargo test -p circlefi-circle                          # scenario tests + 16 cases per property (~1 min)
+PROPTEST_CASES=256 cargo test -p circlefi-circle       # a deeper search (~15 min)
 ```
 
 ## Licence
