@@ -1,4 +1,4 @@
-﻿#![cfg(test)]
+#![cfg(test)]
 
 //! Property-based tests for the CircleFi circle contract.
 //!
@@ -45,12 +45,15 @@
 //! | `prop_single_rotating_defaulter` | One member defaults per round, rotating |
 //! | `prop_default_then_top_up_every_round` | Everyone defaults then tops up |
 
+extern crate std;
+
 use super::*;
 use proptest::prelude::*;
 use soroban_sdk::{
     testutils::{Address as _, Ledger as _},
     token, Address, Env,
 };
+use std::{format, string::String, vec, vec::Vec};
 
 // ============================================================================
 // Domain model
@@ -110,7 +113,7 @@ struct MemberLedger {
 ///
 /// MIN_CAPACITY is 3 (a two-member circle is just a loan) and
 /// MAX_CAPACITY is 24 (bounded so `settle` stays within a single
-/// transaction''s resource budget).
+/// transaction's resource budget).
 fn arb_capacity() -> impl Strategy<Value = u32> {
     3u32..=24u32
 }
@@ -146,7 +149,7 @@ prop_compose! {
     }
 }
 
-/// Generates a single member''s action for one round.
+/// Generates a single member's action for one round.
 ///
 /// Weights: Pay=6, Default=3, DefaultThenTopUp=1 (60/30/10 split).
 /// The bias towards paying keeps most circles solvent to exercise the payout
@@ -166,13 +169,10 @@ fn arb_round_action() -> impl Strategy<Value = RoundAction> {
 /// Inner vec (length capacity): one action per member in that round.
 ///
 /// Dimensions are determined by `capacity` so the matrix is always
-/// consistent with the circle''s term sheet.
+/// consistent with the circle's term sheet.
 fn arb_all_actions(capacity: u32) -> impl Strategy<Value = Vec<Vec<RoundAction>>> {
     let n = capacity as usize;
-    proptest::collection::vec(
-        proptest::collection::vec(arb_round_action(), n),
-        n,
-    )
+    proptest::collection::vec(proptest::collection::vec(arb_round_action(), n), n)
 }
 
 // ============================================================================
@@ -188,7 +188,7 @@ fn arb_all_actions(capacity: u32) -> impl Strategy<Value = Vec<Vec<RoundAction>>
 /// 2. Snapshot: record balances before join (I-4 baseline).
 /// 3. Join: all members join, locking one contribution as a deposit.
 /// 4. Rounds: for each of the `capacity` rounds:
-///    a. Apply every member''s RoundAction (contribute or skip).
+///    a. Apply every member's RoundAction (contribute or skip).
 ///    b. Advance clock past round_ends_at so settle cannot be blocked.
 ///    c. Call settle.
 ///    d. For DefaultThenTopUp members, call top_up if deposit was drawn down.
@@ -208,9 +208,9 @@ fn run_circle_scenario(
     let env = Env::default();
     env.mock_all_auths();
 
-    let issuer   = Address::generate(&env);
+    let issuer = Address::generate(&env);
     let token_id = env.register_stellar_asset_contract_v2(issuer).address();
-    let minter   = token::StellarAssetClient::new(&env, &token_id);
+    let minter = token::StellarAssetClient::new(&env, &token_id);
 
     let n = params.capacity as usize;
 
@@ -222,7 +222,8 @@ fn run_circle_scenario(
     //
     // SAFETY: capacity <= 24 and contribution <= 1_000_000, so
     //   3 x 24 x 1_000_000 = 72_000_000, far below i128::MAX.
-    let per_member_mint = params.contribution
+    let per_member_mint = params
+        .contribution
         .saturating_mul(params.capacity as i128 * 3)
         .max(params.contribution * 10);
 
@@ -244,7 +245,7 @@ fn run_circle_scenario(
         ),
     );
     let client = CircleClient::new(&env, &contract_id);
-    let token  = token::Client::new(&env, &token_id);
+    let token = token::Client::new(&env, &token_id);
 
     // -- Phase 2: balance snapshot (I-4 baseline) ----------------------------
     // Capture balances immediately before join so the conservation check uses
@@ -258,13 +259,14 @@ fn run_circle_scenario(
 
     // -- Phase 4: rounds -----------------------------------------------------
     let mut ledger: Vec<MemberLedger> = (0..n)
-        .map(|_| MemberLedger { paid_rounds: 0, defaulted_rounds: 0 })
+        .map(|_| MemberLedger {
+            paid_rounds: 0,
+            defaulted_rounds: 0,
+        })
         .collect();
 
-    for round_idx in 0..n {
-        let round_actions = &all_actions[round_idx];
-
-        // 4a. Apply each member''s action.
+    for round_actions in all_actions.iter().take(n) {
+        // 4a. Apply each member's action.
         for (mi, &action) in round_actions.iter().enumerate() {
             match action {
                 RoundAction::Pay => {
@@ -288,8 +290,8 @@ fn run_circle_scenario(
         env.ledger().set_timestamp(ends_at + 1);
 
         // 4c. Settle the round.
-        // settle covers all unpaid contributions from the defaulters'' deposits,
-        // pays the round''s recipient, and opens the next round.
+        // settle covers all unpaid contributions from the defaulters' deposits,
+        // pays the round's recipient, and opens the next round.
         client.settle();
 
         // 4d. Restore deposits for DefaultThenTopUp members.
@@ -323,7 +325,7 @@ fn run_circle_scenario(
     }
 
     // I-2: Every member must have received their payout.
-    // `settle` marks received = true on the round''s recipient. If this flag
+    // `settle` marks received = true on the round's recipient. If this flag
     // is false, the settle loop skipped or exited early for that member.
     for (i, m) in members.iter().enumerate() {
         let rec = client.get_member(m).unwrap();
@@ -392,7 +394,21 @@ fn run_circle_scenario(
 // Property tests
 // ============================================================================
 
+/// Each case drives a whole circle (up to 24 members x 24 rounds) through the
+/// Soroban test environment, so proptest's default of 256 cases per property
+/// takes around 15 minutes. Run 16 by default so `cargo test` and CI stay
+/// fast; set PROPTEST_CASES for a deeper search.
+fn config() -> ProptestConfig {
+    let cases = std::env::var("PROPTEST_CASES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(16);
+    ProptestConfig::with_cases(cases)
+}
+
 proptest! {
+    #![proptest_config(config())]
+
     // -- Property A: general accounting soundness ----------------------------
     //
     // For any valid circle parameters and any pattern of payments and defaults,
@@ -444,7 +460,7 @@ proptest! {
     // round 1 (deposit == contribution => covered exactly). From round 2 the
     // deposit is 0, the member is delinquent, and their contribution to the
     // pot is 0. The pots after round 1 are therefore 0, but the contract must
-    // still end at zero and every member''s received flag must still be set.
+    // still end at zero and every member's received flag must still be set.
     //
     // This is the scenario most likely to expose an off-by-one in the deposit
     // drawdown or delinquency logic.
